@@ -75,23 +75,36 @@ Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 Listing all tokens
 
 ```powershell
-Get-SecureTokenList -Filter "\w+y"
+Get-SecureTokenList
 Aida
 Candy
 Myne
 Myne2
 ```
 
-### Example 4
+### Example 4, 5, & 6
 Filtering saved tokens (regex!)
 
+All that start with C:
+```powershell
+Get-SecureTokenList -Filter C
+Candy
+```
+
+All that have a y in the name
 ```powershell
 Get-SecureTokenList -Filter "\w+y"
 Myne
 Myne2
 ```
 
-### Example 5
+All that have a digit in the name
+```powershell
+Get-SecureTokenList -Filter "\d"
+Myne2
+```
+
+### Example 7
 Viewing a token
 
 ```powershell
