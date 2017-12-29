@@ -5,6 +5,13 @@ Function Get-SecureTokenFolder {
 
 	.DESCRIPTION
 	This function lists the folder where all of the SecureTokens are stored.
+
+	.EXAMPLE
+	Get-SecureTokenFolder
+
+Folder                                       Exists
+------                                       ------
+C:\Users\user\AppData\Roaming\SecureTokens   True
 	#>
 
 	$hash = @{
@@ -54,6 +61,11 @@ Function Get-SecureTokenList {
 	Get-SecureTokenList -Filter '\d'
 
 	Returns a list of all items with digits in the name
+
+	.EXAMPLE
+	Get-SecureTokenList -Filter D
+
+	Returns a list of all items that start with D
 	#>
 	param (
 		[Alias('Directory', 'Dir')]

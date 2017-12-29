@@ -23,7 +23,7 @@ and holding the encrypted string in the body of the file. You can change
 the name, but don't change the content!
 
 ### Usage
-You must import this module via PowerShell native Import-Module command
+You must import this module via the PowerShell native Import-Module command
 
 ```powershell
 import-module SecureTokens
@@ -31,23 +31,39 @@ import-module SecureTokens
 
 From there you can:
 
-| Set-SecureTokenFolder | Set (and save) the location of the files that hold secured tokens |
-| Get-SecureTokenFolder | Returns the path to the tokens folder |
-| Add-SecureToken | Add a token to the secured tokens file |
-| Get-SecureToken | Returns the Token for the specified Name |
-| Get-SecureTokenList | Returns the names of all tokens |
-| Get-SecureTokenHelp | List commands available in the SecureTokens Module |
+Command                 | Description
+--- | ---
+Set-SecureTokenFolder   | Set (and save) the location of the files that hold secured tokens
+Get-SecureTokenFolder   | Returns the path to the tokens folder
+Add-SecureToken         | Add a token to the secured tokens file
+Get-SecureToken         | Returns the Token for the specified Name
+Get-SecureTokenList     | Returns the names of all tokens
+Get-SecureTokenHelp     | List commands available in the SecureTokens Module
 
 The module will automatically show these commands on load (it runs
-Get-SecureTokenHelp) unless you use the `-ArgumentList $true` command.
+Get-SecureTokenHelp) unless you use the `-ArgumentList $true` option of
+the Import-Module command.
+
+On first run, the default location for tokens will *NOT* be created. You will
+want to fix that with the `Set-SecureTokenFolder` command.
+
+To Set the Default Location:
+```powershell
+Set-SecureTokenFolder -Default -Clobber
+```
+
+To Set the Your Own location:
+```powershell
+Set-SecureTokenFolder -Folder 'C:\Scripts\Tokens' -Clobber
+```
 
 ## Examples
 
-### Example 1
+### Initialization
 Importing the module
 
 ```powershell
-Import-Module .\SecureTokens.psd1 -Force
+PS C:\Scripts> Import-Module .\SecureTokens.psd1 -Force
 Attempting to load SecureTokens config file...
   Loaded config file
   Path to SecureTokens (C:\Users\user\AppData\Roaming\SecureTokens) is valid
@@ -57,21 +73,22 @@ Getting available functions...
 Command               Description
 -------               -----------
 Add-SecureToken       Add a token to the secured tokens file
+Get-SecureToken       Returns the Token for the specified Name
 Get-SecureTokenFolder Returns the path to the tokens folder
 Get-SecureTokenHelp   List commands available in the SecureTokens Module
 Get-SecureTokenList   Returns the names of all tokens
 Set-SecureTokenFolder Set (and save) the location of the files that hold secured tokens
 ```
 
-### Example 2
+### Adding Tokens
 Saving a token called Aida
 
 ```powershell
-Add-SecureToken -Name 'Aida' -Token '1234-5678-9'
+PS C:\Scripts> Add-SecureToken -Name 'Aida' -Token '1234-5678-9'
 Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 ```
 
-### Example 3
+### Listing tokens
 Listing all tokens
 
 ```powershell
@@ -82,39 +99,43 @@ Myne
 Myne2
 ```
 
-### Example 4, 5, & 6
-Filtering saved tokens (regex!)
+#### Filtering saved tokens (regex!)
 
 All that start with C:
 ```powershell
-Get-SecureTokenList -Filter C
+PS C:\Scripts> Get-SecureTokenList -Filter C
 Candy
 ```
 
 All that have a y in the name
 ```powershell
-Get-SecureTokenList -Filter "\w+y"
+PS C:\Scripts> Get-SecureTokenList -Filter "\w+y"
 Myne
 Myne2
 ```
 
 All that have a digit in the name
 ```powershell
-Get-SecureTokenList -Filter "\d"
+PS C:\Scripts> Get-SecureTokenList -Filter "\d"
 Myne2
 ```
 
-### Example 7
+### Using Tokens
 Viewing a token
 
 ```powershell
-Get-SecureToken -Name 'Aida'
+PS C:\Scripts> Get-SecureToken -Name 'Aida'
 
 Name       Token
 ----       -----
 Aida       1234-5678-9
 ```
 
+Using a token in a script
 
+```powershell
+$Token = (Get-SecureToken -Name SlackAPIToken).Token
+Add-SlackMessage -Channel 'Public' -Message 'Hello World!' -Token $Token
+````
 
 
