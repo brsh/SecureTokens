@@ -18,9 +18,13 @@ I default the tokens to the user's AppData\Roaming folder:
 C:\Users\username\AppData\Roaming\SecureTokens
 ```
 
-Each file is a simple text file with using the token name as the filename
-and holding the encrypted string in the body of the file. You can change
-the name, but don't change the content!
+Each file is a simple text file using the token name as the filename and
+the encrypted string as the body of the file. You can change the filename,
+but *don't change the content*!
+
+Since these are files, you can delete and rename them via any of the usual
+Windows file management tools. I'll probably add some rename- and remove-
+commands, but this is good for now.
 
 ### Usage
 Naturally, the module should go where PowerShell modules go, either in the
@@ -62,7 +66,7 @@ want to fix that with the `Set-SecureTokenFolder` command (examples below).
 Importing the module
 
 ```powershell
-PS C:\Scripts> Import-Module .\SecureTokens.psd1 -Force
+PS C:\Scripts> Import-Module SecureTokens
 Attempting to load SecureTokens config file...
   Loaded config file
   Path to SecureTokens (C:\Users\user\AppData\Roaming\SecureTokens) is valid
@@ -140,7 +144,7 @@ Myne2
 
 All that have a digit in the name
 ```powershell
-PS C:\Scripts> Get-SecureTokenList -Filter "\d"
+PS C:\Scripts> Get-SecureTokenList -Filter "\w+\d"
 Myne2
 ```
 
