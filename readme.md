@@ -23,7 +23,12 @@ and holding the encrypted string in the body of the file. You can change
 the name, but don't change the content!
 
 ### Usage
-You must import this module via the PowerShell native Import-Module command
+Naturally, the module should go where PowerShell modules go, either in the
+`C:\Users\YourUser\Documents\WindowsPowerShell\Modules` (for you personally)
+or the `C:\Windows\system32\WindowsPowerShell\v1.0\Modules` (for everyone)
+folder. (Yes, there are other options, but these are generally the main ones).
+
+You can then import this module via the PowerShell native Import-Module command:
 
 ```powershell
 import-module SecureTokens
@@ -85,7 +90,12 @@ To set the your own location:
 PS C:\Scripts> Set-SecureTokenFolder -Folder 'C:\Scripts\Tokens' -Clobber
 ```
 
-To check the location
+To set a temporary location (maybe alternate tokens? test vs prod?):
+```powershell
+PS C:\Scripts> Set-SecureTokenFolder -Folder 'C:\Scripts\ProdTokens'
+```
+
+To check the current token location
 ```powershell
 PS C:\Scripts> Get-SecureTokenFolder
 
