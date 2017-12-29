@@ -42,20 +42,14 @@ Get-SecureTokenHelp     | List commands available in the SecureTokens Module
 
 The module will automatically show these commands on load (it runs
 Get-SecureTokenHelp) unless you use the `-ArgumentList $true` option of
-the Import-Module command.
+the Import-Module command (the first parameter of the module is 'Quiet').
+
+```powershell
+import-module SecureTokens -ArgumentList $true
+```
 
 On first run, the default location for tokens will *NOT* be created. You will
-want to fix that with the `Set-SecureTokenFolder` command.
-
-To Set the Default Location:
-```powershell
-Set-SecureTokenFolder -Default -Clobber
-```
-
-To Set the Your Own location:
-```powershell
-Set-SecureTokenFolder -Folder 'C:\Scripts\Tokens' -Clobber
-```
+want to fix that with the `Set-SecureTokenFolder` command (examples below).
 
 ## Examples
 
@@ -80,6 +74,26 @@ Get-SecureTokenList   Returns the names of all tokens
 Set-SecureTokenFolder Set (and save) the location of the files that hold secured tokens
 ```
 
+### Working with the Tokens folder
+To set the default location:
+```powershell
+PS C:\Scripts> Set-SecureTokenFolder -Default -Clobber
+```
+
+To set the your own location:
+```powershell
+PS C:\Scripts> Set-SecureTokenFolder -Folder 'C:\Scripts\Tokens' -Clobber
+```
+
+To check the location
+```powershell
+PS C:\Scripts> Get-SecureTokenFolder
+
+Folder                                       Exists
+------                                       ------
+C:\Users\user\AppData\Roaming\SecureTokens   True
+```
+
 ### Adding Tokens
 Saving a token called Aida
 
@@ -92,7 +106,7 @@ Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 Listing all tokens
 
 ```powershell
-Get-SecureTokenList
+PS C:\Scripts> Get-SecureTokenList
 Aida
 Candy
 Myne
@@ -101,7 +115,7 @@ Myne2
 
 #### Filtering saved tokens (regex!)
 
-All that start with C:
+All that start with C
 ```powershell
 PS C:\Scripts> Get-SecureTokenList -Filter C
 Candy
@@ -135,7 +149,11 @@ Using a token in a script
 
 ```powershell
 $Token = (Get-SecureToken -Name SlackAPIToken).Token
-Add-SlackMessage -Channel 'Public' -Message 'Hello World!' -Token $Token
+if ($Token) {
+  Add-SlackMessage -Channel 'Public' -Message 'Hello World!' -Token $Token
+} else {
+  "No token found"
+}
 ````
 
 

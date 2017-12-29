@@ -78,7 +78,7 @@ Function Get-SecureTokenList {
 			try {
 				[string[]] $list = (Get-ChildItem $Folder -Filter '*.txt' -ErrorAction Stop).BaseName
 				if ($filter) {
-					$list = $list | Where-Object { $_ -match $Filter }
+					$list = $list | Where-Object { $_ -match "^$Filter" }
 				}
 				$list
 			} catch {
