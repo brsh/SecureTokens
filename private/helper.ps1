@@ -8,7 +8,7 @@ function Set-SavedToken {
 	)
 	$retval = "Nothing Happened"
 	if (($name) -and ($token)) {
-		$SecureToken = $Token | ConvertTo-SecureString -AsPlainText -Force
+		$SecureToken = $Token | ConvertTo-SecureString -AsPlainText -Force -ErrorAction Stop
 		$SecureTokenAsText = $SecureToken | ConvertFrom-SecureString
 		$credpath = "$($script:SecureTokenFolder)\$Name.txt"
 		try {
@@ -30,9 +30,15 @@ function Get-SavedToken {
 	[string] $retval = ''
 	if ($Name) {
 		$credpath = "$($script:SecureTokenFolder)\$Name.txt"
-		$UsableSecureString = Get-Content $credpath | ConvertTo-SecureString
-		$Credentials = New-Object System.Management.Automation.PSCredential ("MySlackToken", $UsableSecureString)
-		$Credentials.GetNetworkCredential().Password
+		try {
+			$UsableSecureString = Get-Content $credpath | ConvertTo-SecureString -ErrorAction Stop
+			$Credentials = New-Object System.Management.Automation.PSCredential ("MySlackToken", $UsableSecureString)
+			$retval = $Credentials.GetNetworkCredential().Password
+		} catch [System.Security.Cryptography.CryptographicException] {
+			$retval = "Error: Maybe Token Not Owned By This User on This Machine"
+		} catch {
+			$retval = "Error: $($_.Exception.Message)"
+		}
 	}
-
+	$retval
 }
