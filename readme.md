@@ -11,6 +11,10 @@ Is it absolutely secure? No, not really. But it is limited to decoding only
 by the user who creates them on the machine they're created on, so that helps.
 A little.
 
+Yes, you read that right: the files created on 1 system by 1 user are useless
+on another system or for another user. **Only the user who creates the files
+can use them _on the machine where they are created_**.
+
 ### Folder for Tokens
 I default the tokens to the user's AppData\Roaming folder:
 
