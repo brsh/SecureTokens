@@ -31,45 +31,34 @@ Get-ChildItem $script:ScriptPath/public -Recurse -Filter "*.ps1" -File | ForEach
 
 [string] $script:SecureTokenFolder = ""
 
-if (-not $Quiet) {
-	try {
-		if (test-path "$script:scriptpath\config\FolderPath.txt") {
-			Write-host "Attempting to load SecureTokens config file..."
-			[string] $script:SecureTokenFolder = get-content "$script:scriptpath\config\FolderPath.txt"
-			Write-Host "  Loaded config file" -ForegroundColor Green
+try {
+	if (test-path "$script:scriptpath\config\FolderPath.txt") {
+		if (-not $Quiet) { Write-host "Attempting to load SecureTokens config file..." }
+		[string] $script:SecureTokenFolder = get-content "$script:scriptpath\config\FolderPath.txt"
+		if (-not $Quiet) { Write-Host "  Loaded config file" -ForegroundColor Green }
+		if (-not $Quiet) {
 			if (test-path $script:SecureTokenFolder -ErrorAction SilentlyContinue) {
 				Write-Host "  Path to SecureTokens ($($script:SecureTokenFolder)) is valid" -ForegroundColor Green
 			} else {
 				Write-Host "  Path to SecureTokens ($($script:SecureTokenFolder)) is NOT valid" -ForegroundColor Yellow
 				Write-Host "  Use the Set-SecureTokenFolder function "
 			}
-		} else {
-			Write-host "Default config does not exist.... Fixing that problem.... " -ForegroundColor Yellow
-			Set-SecureTokenFolder -default -clobber
+		}
+	} else {
+		if (-not $Quiet) { Write-host "Default config does not exist.... Fixing that problem.... " -ForegroundColor Yellow }
+		Set-SecureTokenFolder -default -clobber
+		if (-not $Quiet) {
 			Write-host "  Use Set-SecureTokenFolder to override this default (if necessary)"
 			Write-host ""
 		}
-
-	} catch {
-		$script:SecureTokenFolder = ""
-		Write-Host "No default sites file exists. Use 'Set-SecureTokenFolder' to create one"
 	}
 
-	Get-SecureTokenHelp
+} catch {
+	$script:SecureTokenFolder = ""
+	Write-Host "No default sites file exists. Use 'Set-SecureTokenFolder' to create one"
 }
 
-# #Export-ModuleMember -Variable TestWebstackFile
-
-# Export-ModuleMember -function Get-*
-# Export-ModuleMember -function Set-*
-# Export-ModuleMember -function Test-*
-# Export-ModuleMember -function Read-*
-# Export-ModuleMember -function New-*
-# Export-ModuleMember -function Add-*
-# Export-ModuleMember -function Remove-*
-
-
-# #Export-ModuleMember -alias *
+if (-not $Quiet) { Get-SecureTokenHelp }
 
 
 ###################################################
