@@ -123,6 +123,13 @@ Aida2      Not Found
 
 	#>
 	param (
+		[ArgumentCompleter( {
+				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
+				Get-SecureTokenList
+			})]
+		[ValidateScript( {
+				$_ -in (Get-SecureTokenList)
+			})]
 		[string] $Name = ''
 	)
 

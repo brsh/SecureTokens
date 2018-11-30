@@ -131,6 +131,10 @@ Function Add-SecureToken {
 	param (
 		[Parameter(Mandatory = $true, Position = 0)]
 		[ValidateNotNullOrEmpty()]
+		[ArgumentCompleter( {
+				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
+				Get-SecureTokenList
+			})]
 		[Alias('UserName', 'User', 'Item')]
 		[string] $Name,
 		[Parameter(Mandatory = $true, Position = 1)]
