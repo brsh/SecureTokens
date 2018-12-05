@@ -133,7 +133,11 @@ Function Add-SecureToken {
 		[ValidateNotNullOrEmpty()]
 		[ArgumentCompleter( {
 				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
-				Get-SecureTokenList
+				if ($WordToComplete) {
+					Get-SecureTokenList -Filter "$WordToComplete"
+				} else {
+					Get-SecureTokenList
+				}
 			})]
 		[Alias('UserName', 'User', 'Item')]
 		[string] $Name,

@@ -125,7 +125,11 @@ Aida2      Not Found
 	param (
 		[ArgumentCompleter( {
 				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
-				Get-SecureTokenList
+				if ($WordToComplete) {
+					Get-SecureTokenList -Filter "$WordToComplete"
+				} else {
+					Get-SecureTokenList
+				}
 			})]
 		[ValidateScript( {
 				$_ -in (Get-SecureTokenList)
