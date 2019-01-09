@@ -131,10 +131,8 @@ Aida2      Not Found
 					Get-SecureTokenList
 				}
 			})]
-		[ValidateScript( {
-				$_ -in (Get-SecureTokenList)
-			})]
-		[string] $Name = ''
+		[Parameter(Mandatory = $true)]
+		[string] $Name
 	)
 
 	$hash = @{

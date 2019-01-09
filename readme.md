@@ -5,15 +5,28 @@
 I wrote this module as a way to manage passwords and application api tokens
 used by my scripts. Rather than save them un-encrypted or un-obfuscated where
 anyone and everyone could either read them or figure them out, this leverages
-the built-in features of the PowerShell secure-string.
+the built-in features of the PowerShell secure-string (non-portable) or cert
+document encryption (portable).
 
-Is it absolutely secure? No, not really. But it is limited to decoding only
-by the user who creates them on the machine they're created on, so that helps.
-A little.
+Is it absolutely secure? No, not really. But the non-portable Token is limited
+to decoding only by the user who creates them on the machine they're created on;
+and the portable Token requires the correct certificate installed in the correct
+certificate store. So that helps. A little.
 
-Yes, you read that right: the files created on 1 system by 1 user are useless
-on another system or for another user. **Only the user who creates the files
-can use them _on the machine where they are created_**.
+Yes, you read that right:
+  * the non-portable files created on 1 system by 1 user are useless on another
+  system or for another user. **Only the user who creates the files can use them
+  _on the machine where they are created_**.
+  * the portable files created on 1 system by 1 user requires the correct certificate
+  installed to the correct certificate store (so CurrentUser\My if it will be used
+  by a user or LocalMachine\My if the script will be run "by the computer")
+
+
+### Note
+Huge shout out to Boe Prox for the CMS message encryption!
+https://mcpmag.com/articles/2017/10/05/encrypting-data-with-powershell-cmdlets.aspx
+
+SecureTokens are portable, baybee!!
 
 ### Folder for Tokens
 I default the tokens to the user's AppData\Roaming folder:
@@ -27,8 +40,14 @@ the encrypted string as the body of the file. You can change the filename,
 but *don't change the content*!
 
 Since these are files, you can delete and rename them via any of the usual
-Windows file management tools. I'll probably add some rename- and remove-
-commands, but this is good for now.
+Windows file management tools. I've also added some low-key rename and
+remove functions to help and make it a bit more self-contained.
+
+I provide functions to manage certs (create-, export-, import-) ... but not
+delete!! You can use PowerShell's certificate PSDrive for that (either
+`cert:\CurrentUser\My` or `cert:\LocalMachine\My`) or the MMC.exe Certificates
+snap-in (the `My` store is called `Personal\Certificates` there ... cuz
+consistency).
 
 ### Usage
 Naturally, the module should go where PowerShell modules go, either in the
@@ -44,14 +63,20 @@ import-module SecureTokens
 
 From there you can:
 
-Command                 | Description
+Command                        | Description
 --- | ---
-Set-SecureTokenFolder   | Set (and save) the location of the files that hold secured tokens
-Get-SecureTokenFolder   | Returns the path to the tokens folder
-Add-SecureToken         | Add a token to the secured tokens file
-Get-SecureToken         | Returns the Token for the specified Name
-Get-SecureTokenList     | Returns the names of all tokens
-Get-SecureTokenHelp     | List commands available in the SecureTokens Module
+Set-SecureTokenFolder          | Set (and save) the location of the files that hold secured tokens
+Get-SecureTokenFolder          | Returns the path to the tokens folder
+Add-SecureToken                | Add a token to the secured tokens file
+Get-SecureToken                | Returns the Token for the specified Name
+Get-SecureTokenList            | Returns the names of all tokens
+Get-SecureTokenHelp            | List commands available in the SecureTokens Module
+New-STEncryptionCertificate    | Creates a new document encryption certificate
+Find-STEncryptionCertificate   | Returns certificates available for encryption
+Export-STEncryptionCertificate | Exports a document encryption certificate for later import
+Import-STEncryptionCertificate | Imports a document encryption certificate for use
+Remove-SecureToken             | Deletes an existing Token
+Rename-SecureToken             | Renames an existing Token to the specified Name
 
 The module will automatically show these commands on load (it runs
 Get-SecureTokenHelp) unless you use the `-ArgumentList $true` option of
@@ -79,12 +104,18 @@ Getting available functions...
 
 Command               Description
 -------               -----------
-Add-SecureToken       Add a token to the secured tokens file
-Get-SecureToken       Returns the Token for the specified Name
-Get-SecureTokenFolder Returns the path to the tokens folder
-Get-SecureTokenHelp   List commands available in the SecureTokens Module
-Get-SecureTokenList   Returns the names of all tokens
-Set-SecureTokenFolder Set (and save) the location of the files that hold secured tokens
+Add-SecureToken                Add a token to the secured tokens file
+Export-STEncryptionCertificate Exports a document encryption certificate for later import
+Find-STEncryptionCertificate   Returns certificates available for encryption
+Get-SecureToken                Returns the Token for the specified Name
+Get-SecureTokenFolder          Returns the path to the tokens folder
+Get-SecureTokenHelp            List commands available in the SecureTokens Module
+Get-SecureTokenList            Returns the names of all tokens
+Import-STEncryptionCertificate Imports a document encryption certificate for use
+New-STEncryptionCertificate    Creates a new document encryption certificate
+Remove-SecureToken             Deletes an existing Token
+Rename-SecureToken             Renames an existing Token to the specified Name
+Set-SecureTokenFolder          Set (and save) the location of the files that hold secured tokens
 ```
 
 ### Working with the Tokens folder
@@ -114,15 +145,18 @@ C:\Users\user\AppData\Roaming\SecureTokens   True
 
 ### Adding Tokens
 Saving a token called Aida
-
 ```powershell
 PS C:\Scripts> Add-SecureToken -Name 'Aida' -Token '1234-5678-9'
 Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 ```
 
+```powershell
+PS C:\Scripts> Add-SecureToken -Name 'Aida' -Token '1234-5678-9' -Certificate 'cn=mycert@localhost'
+Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
+```
+
 ### Listing tokens
 Listing all tokens
-
 ```powershell
 PS C:\Scripts> Get-SecureTokenList
 Aida
@@ -154,7 +188,6 @@ Myne2
 
 ### Using Tokens
 Viewing a token
-
 ```powershell
 PS C:\Scripts> Get-SecureToken -Name 'Aida'
 
@@ -164,7 +197,6 @@ Aida       1234-5678-9
 ```
 
 Using a token in a script
-
 ```powershell
 $Token = (Get-SecureToken -Name SlackAPIToken).Token
 if ($Token) {
@@ -172,6 +204,76 @@ if ($Token) {
 } else {
   "No token found"
 }
-````
+```
 
+### Modifying Tokens
+Renaming a token
+```powershell
+PS C:\Scripts> Rename-SecureToken -Name 'Aida' -NewName 'Adia'
 
+Name       NewName
+----       -----
+Aida       Adia
+```
+
+Deleting a token
+```powershell
+PS C:\Scripts> Remove-SecureToken -Name 'Aida' -Confirm
+
+Confirm
+Are you sure you want to perform this action?
+Performing the operation "Remove File" on target "C:\Users\youruser\AppData\Roaming\SecureTokens\Aida.txt".
+[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "Y"): y
+
+Name   Deleted
+----   -------
+Aida      True
+```
+
+### Working with Certs
+Creating a new certificate (defaults to 2048-bit and 100 year expiration)
+```powershell
+PS C:\Scripts> New-STEncryptionCertificate -Subject 'portableenc@localhost'
+
+Thumbprint                                 Expires      Subject
+----------                                 -------      -------
+D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B   01/09/2119   CN=portableenc@localhost
+```
+
+Creating a new certificate (4096-bit and 100 days expiration)
+```powershell
+PS C:\Scripts> New-STEncryptionCertificate -Subject 'portableenc@localhost' -HighKeyLength -Days 100
+
+Thumbprint                                 Expires      Subject
+----------                                 -------      -------
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=portableenc@localhost
+```
+
+Export a certificate
+```powershell
+PS C:\Scripts> Export-STEncryptionCertificate -Thumbprint D058A8397FDEF8ECB378406861FA7E6A64C2B1DC -OutPath C:\Scripts\
+
+cmdlet Export-STEncryptionCertificate at command pipeline position 1
+Supply values for the following parameters:
+(Type !? for Help.)
+Password: ****
+
+Thumbprint                               Status  Filename
+----------                               ------  --------
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC Success C:\Scripts\D058A8397FDEF8ECB378406861FA7E6A64C2B1DC.pfx
+```
+(you can, of course, rename this file)
+
+Import a certificate
+```powershell
+PS C:\Scripts> Import-STEncryptionCertificate -Fullname .\D058A8397FDEF8ECB378406861FA7E6A64C2B1DC.pfx
+
+cmdlet Import-STEncryptionCertificate at command pipeline position 1
+Supply values for the following parameters:
+(Type !? for Help.)
+Password: ****
+
+Thumbprint                                 Expires      Subject
+----------                                 -------      -------
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=portableenc@localhost
+```

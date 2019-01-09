@@ -111,7 +111,8 @@ Function Add-SecureToken {
 	.DESCRIPTION
 	Tokens are passwords or api-keys or other items that you might reference occasionally
 	in scripts or command lines but that you don't want other people to know. This command
-	adds a new token, secured via PowerShell's securestring encryption.
+	adds a new token, secured via PowerShell's securestring encryption (tied to this user
+	on this machine) or via certificate document encryption (potentially portable).
 
 	.PARAMETER Name
 	The name of the token - only used for reference to the stored Token
@@ -119,13 +120,20 @@ Function Add-SecureToken {
 	.PARAMETER Token
 	The actual token
 
+	.PARAMETER Certificate
+
 	.PARAMETER Clobber
 	Overwrite an existing token if it exists
 
 	.EXAMPLE
 	Add-SecureToken -Name 'MyUserName' -Token 'P@ssw0rd!'
 
-	This will save a the token 'P@ssw0rd!' as an encrypted string for MyUserName
+	This will save the token 'P@ssw0rd!' as an encrypted string for MyUserName
+
+	.EXAMPLE
+	Add-SecureToken -Name 'PortablePassword' -Token 'P@ssw0rd!' -Certificate 'cn=portable@localhost'
+
+	This will save the token as an encrypted string using the cn=portable@localhost certificate
 
 	#>
 	param (
@@ -147,7 +155,17 @@ Function Add-SecureToken {
 		[string] $Token,
 		[Parameter(Mandatory = $false, Position = 0)]
 		[Alias('Force')]
-		[switch] $Clobber = $false
+		[switch] $Clobber = $false,
+		[ArgumentCompleter( {
+				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
+				if ($WordToComplete) {
+					(Find-STEncryptionCertificate -Filter "$WordToComplete").Subject
+				} else {
+					(Find-STEncryptionCertificate).Subject
+				}
+			})]
+		[Alias('Cert', 'To')]
+		[string] $Certificate
 	)
 
 	try {
@@ -168,7 +186,13 @@ Function Add-SecureToken {
 	}
 
 	if ($DoIt) {
-		$retval = Set-SavedToken -Name $Name -Token $Token
+		$hash = @{
+			Name  = $Name
+			Token = $Token
+		}
+		if ($Certificate) { $hash.Add("Certificate", $Certificate)}
+		$retval = Set-SavedToken @hash
+
 		if ($retval -match "Error: ") {
 			Write-Host "There was an error saving the token." -ForegroundColor Red
 			Write-Host "  $retval" -ForegroundColor Yellow
@@ -178,6 +202,5 @@ Function Add-SecureToken {
 	} else {
 		Write-Host 'Not saving the Token' -ForegroundColor Yellow
 	}
-
 }
 

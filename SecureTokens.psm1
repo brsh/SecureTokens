@@ -58,6 +58,12 @@ try {
 	Write-Host "No default sites file exists. Use 'Set-SecureTokenFolder' to create one"
 }
 
+if (test-path $script:ScriptPath\formats) {
+	try {
+		Update-FormatData $ScriptPath\formats\*.ps1xml -ErrorAction Stop
+	} catch {}
+}
+
 if (-not $Quiet) { Get-SecureTokenHelp }
 
 

@@ -1,0 +1,101 @@
+<Configuration>
+	<ViewDefinitions>
+		<View>
+			<Name>SecureTokens.EncryptionCertificates</Name>
+			<ViewSelectedBy>
+				<TypeName>SecureTokens.EncryptionCertificates</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>Thumbprint</Label>
+						<Width>42</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>Expires</Label>
+						<Width>12</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>Subject</Label>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>Thumbprint</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+									$Escape = "$([char]27)"
+									$Yellow = "$Escape[1;33m"
+									$Green = "$Escape[0;32m"
+									$Red = "$Escape[0;91m"
+									$Off = "$Escape[0m"
+									$color = $Green
+									if ($_.TimeRemaining.Years -eq 0) {
+										$color = $Yellow
+										if (($_.TimeRemaining.Days -le 31) -and ($_.TimeRemaining.Months -lt 1)) {
+											$color = $Red
+										}
+									}
+									"$Color{0}$Off" -f $_.Expires.ToString('MM/dd/yyyy')
+								</ScriptBlock>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>Subject</PropertyName>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
+		<View>
+			<Name>SecureTokens.ExportedCertificates</Name>
+			<ViewSelectedBy>
+				<TypeName>SecureTokens.ExportedCertificates</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>Thumbprint</Label>
+						<Width>40</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>Status</Label>
+						<Width>7</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>Filename</Label>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>Thumbprint</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+									$Escape = "$([char]27)"
+									$Yellow = "$Escape[1;33m"
+									$Green = "$Escape[0;32m"
+									$Red = "$Escape[0;91m"
+									$Off = "$Escape[0m"
+									$color = $Green
+									if ($_.Status -eq 'Error') {
+										$color = $Red
+									}
+									"$Color{0}$Off" -f $_.Status
+								</ScriptBlock>
+							</TableColumnItem>
+							<TableColumnItem>
+								<PropertyName>Filename</PropertyName>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
+	</ViewDefinitions>
+</Configuration>
