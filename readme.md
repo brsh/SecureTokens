@@ -249,6 +249,19 @@ Thumbprint                                 Expires      Subject
 D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=portableenc@localhost
 ```
 
+Viewing existing document encryption certificates
+```powershell
+PS C:\Scripts> Find-STEncryptionCertificate
+
+Thumbprint                                 Expires      Subject
+----------                                 -------      -------
+EEA15A54F3B50E60E42E95F765CFC8D22D5E98A5   01/12/2019   CN=testenc3@localhost
+2F6883858A09215233C2D80690707AC7CD36EAF2   04/12/2019   CN=testenc2@localhost
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=poratbleenc@localhost
+51382C455E6590B00526AB99E5FDB5F63D1C53ED   01/02/2119   CN=testenc@localhost
+D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B   01/09/2119   CN=poratbleenc@localhost
+```
+
 Export a certificate
 ```powershell
 PS C:\Scripts> Export-STEncryptionCertificate -Thumbprint D058A8397FDEF8ECB378406861FA7E6A64C2B1DC -OutPath C:\Scripts\
@@ -264,6 +277,24 @@ D058A8397FDEF8ECB378406861FA7E6A64C2B1DC Success C:\Scripts\D058A8397FDEF8ECB378
 ```
 (you can, of course, rename this file)
 
+Export all certificates
+```powershell
+PS C:\Scripts> Find-STEncryptionCertificate | Export-STEncryptionCertificate -OutPath .
+
+cmdlet Export-STEncryptionCertificate at command pipeline position 2
+Supply values for the following parameters:
+(Type !? for Help.)
+Password: ****
+
+Thumbprint                               Status  Filename
+----------                               ------  --------
+EEA15A54F3B50E60E42E95F765CFC8D22D5E98A5 Success C:\Scripts\tcerts\EEA15A54F3B50E60E42E95F765CFC8D22D5E98A5.pfx
+2F6883858A09215233C2D80690707AC7CD36EAF2 Success C:\Scripts\tcerts\2F6883858A09215233C2D80690707AC7CD36EAF2.pfx
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC Success C:\Scripts\tcerts\D058A8397FDEF8ECB378406861FA7E6A64C2B1DC.pfx
+51382C455E6590B00526AB99E5FDB5F63D1C53ED Success C:\Scripts\tcerts\51382C455E6590B00526AB99E5FDB5F63D1C53ED.pfx
+D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B Success C:\Scripts\tcerts\D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B.pfx
+```
+
 Import a certificate
 ```powershell
 PS C:\Scripts> Import-STEncryptionCertificate -Fullname .\D058A8397FDEF8ECB378406861FA7E6A64C2B1DC.pfx
@@ -277,3 +308,23 @@ Thumbprint                                 Expires      Subject
 ----------                                 -------      -------
 D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=portableenc@localhost
 ```
+
+Import all the certificate files
+```powershell
+PS C:\Scripts> dir *.pfx | Import-STEncryptionCertificate
+
+cmdlet Import-STEncryptionCertificate at command pipeline position 2
+Supply values for the following parameters:
+(Type !? for Help.)
+Password: ****
+
+Thumbprint                                 Expires      Subject
+----------                                 -------      -------
+2F6883858A09215233C2D80690707AC7CD36EAF2   04/12/2019   CN=testenc2@localhost
+51382C455E6590B00526AB99E5FDB5F63D1C53ED   01/02/2119   CN=testenc@localhost
+D058A8397FDEF8ECB378406861FA7E6A64C2B1DC   04/19/2019   CN=portableenc@localhost
+D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B   01/09/2119   CN=portableenc@localhost
+EEA15A54F3B50E60E42E95F765CFC8D22D5E98A5   01/12/2019   CN=testenc3@localhost
+```
+(notice the 2 `portableenc` certs ... bad juju)
+
