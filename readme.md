@@ -49,6 +49,15 @@ delete!! You can use PowerShell's certificate PSDrive for that (either
 snap-in (the `My` store is called `Personal\Certificates` there ... cuz
 consistency).
 
+I've also added a Default Certificate option so you can save a default cert
+to use for all new Tokens. Setting a default cert will then force all new
+Tokens to be portable (i.e., certificate encrypted) until the default cert
+is 'unset'. You can still use the -Certificate switch of the Add-SecureToken
+function to over-ride the default cert, but you won't be able to create
+non-portable Tokens unless you clear the default cert. See the
+Set-STDefaultCertificate function for details. (Oh, and yes, the default
+certificate config can be saved to disk for posterity and re-use).
+
 ### Usage
 Naturally, the module should go where PowerShell modules go, either in the
 `C:\Users\YourUser\Documents\WindowsPowerShell\Modules` (for you personally)
@@ -71,12 +80,14 @@ Add-SecureToken                | Add a token to the secured tokens file
 Get-SecureToken                | Returns the Token for the specified Name
 Get-SecureTokenList            | Returns the names of all tokens
 Get-SecureTokenHelp            | List commands available in the SecureTokens Module
+Remove-SecureToken             | Deletes an existing Token
+Rename-SecureToken             | Renames an existing Token to the specified Name
 New-STEncryptionCertificate    | Creates a new document encryption certificate
 Find-STEncryptionCertificate   | Returns certificates available for encryption
 Export-STEncryptionCertificate | Exports a document encryption certificate for later import
 Import-STEncryptionCertificate | Imports a document encryption certificate for use
-Remove-SecureToken             | Deletes an existing Token
-Rename-SecureToken             | Renames an existing Token to the specified Name
+Get-STDefaultCertificate       | Returns the current Default Certificate
+Set-STDefaultCertificate       | Set (and save) the default certificate used to encrypt tokens
 
 The module will automatically show these commands on load (it runs
 Get-SecureTokenHelp) unless you use the `-ArgumentList $true` option of
@@ -111,11 +122,13 @@ Get-SecureToken                Returns the Token for the specified Name
 Get-SecureTokenFolder          Returns the path to the tokens folder
 Get-SecureTokenHelp            List commands available in the SecureTokens Module
 Get-SecureTokenList            Returns the names of all tokens
+Get-STDefaultCertificate       Returns the current Default Certificate
 Import-STEncryptionCertificate Imports a document encryption certificate for use
 New-STEncryptionCertificate    Creates a new document encryption certificate
 Remove-SecureToken             Deletes an existing Token
 Rename-SecureToken             Renames an existing Token to the specified Name
 Set-SecureTokenFolder          Set (and save) the location of the files that hold secured tokens
+Set-STDefaultCertificate       Set (and save) the default certificate used to encrypt tokens
 ```
 
 ### Working with the Tokens folder
@@ -327,4 +340,3 @@ D4035B0B69002C00D2AD124EC2CC8FC0D93F0B4B   01/09/2119   CN=portableenc@localhost
 EEA15A54F3B50E60E42E95F765CFC8D22D5E98A5   01/12/2019   CN=testenc3@localhost
 ```
 (notice the 2 `portableenc` certs ... bad juju)
-

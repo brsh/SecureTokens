@@ -27,7 +27,3 @@ Function Get-SecureTokenHelp {
 	}
 	$all | format-table -Wrap -AutoSize | Out-String | Write-Host
 }
-
-function Get-ShowHelp {
-	$script:showhelp
-}

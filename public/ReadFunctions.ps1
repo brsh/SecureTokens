@@ -29,6 +29,27 @@ C:\Users\user\AppData\Roaming\SecureTokens   True
 	New-Object -TypeName psobject -Property $Hash
 }
 
+Function Get-STDefaultCertificate {
+	<#
+	.SYNOPSIS
+	Returns the current Default Certificate
+
+	.DESCRIPTION
+	This function will return the certificate defined as the default for new
+	Tokens (assuming one _is_ defined).
+
+	.EXAMPLE
+	Get-STDefaultCertificate
+
+	Returns the Default Cert ... or a statement that no default cert is defined
+	#>
+	if ($script:DefaultCert) {
+		Find-STEncryptionCertificate -Filter "${script:DefaultCert}$"
+	} else {
+		Write-Host "No Default Certificate defined" -ForegroundColor Yellow
+	}
+}
+
 Function Get-SecureTokenList {
 	<#
 	.SYNOPSIS

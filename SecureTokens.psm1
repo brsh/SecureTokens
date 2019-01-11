@@ -22,14 +22,15 @@ Get-ChildItem $script:ScriptPath/private -Recurse -Filter "*.ps1" -File | ForEac
 # Dot sourcing public script files
 Get-ChildItem $script:ScriptPath/public -Recurse -Filter "*.ps1" -File | ForEach-Object {
 	. $_.FullName
-	([System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Path $_.FullName -Raw), [ref]$null, [ref]$null)).FindAll( { $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false) | Foreach {
+	([System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Path $_.FullName -Raw), [ref]$null, [ref]$null)).FindAll( { $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false) | ForEach-Object {
 		Export-ModuleMember $_.Name
 		$script:showhelp += $_.Name
 	}
 }
 #endregion public Helpers
 
-[string] $script:SecureTokenFolder = ""
+[string] $script:SecureTokenFolder = ''
+[string] $script:DefaultCert = ''
 
 try {
 	if (test-path "$script:scriptpath\config\FolderPath.txt") {
@@ -55,8 +56,45 @@ try {
 
 } catch {
 	$script:SecureTokenFolder = ""
-	Write-Host "No default sites file exists. Use 'Set-SecureTokenFolder' to create one"
+	Write-Host "No default Token folder exists. Use 'Set-SecureTokenFolder' to create one"
 }
+
+try {
+	if (test-path "$script:scriptpath\config\DefaultCert.txt") {
+		if (-not $Quiet) { Write-host "Attempting to load Default Certificate config file..." }
+		[string] $script:DefaultCert = get-content "$script:scriptpath\config\DefaultCert.txt"
+		if (-not $Quiet) { Write-Host "  Loaded config file" -ForegroundColor Green }
+		if (-not $Quiet) {
+			if ($script:DefaultCert) {
+				if (Find-STEncryptionCertificate -filter "${script:DefaultCert}$") {
+					Write-Host "  SecureTokens Default Cert (" -NoNewline -ForegroundColor Green
+					Write-Host (Find-STEncryptionCertificate -filter "${script:DefaultCert}$").Subject -NoNewline -ForegroundColor Yellow
+					Write-Host ") is configured" -ForegroundColor Green
+				} else {
+					Write-Host "  Saved Default Certificate is not valid for this user/machine"
+				}
+			} else {
+				Write-Host "  SecureTokens Default Certs is NOT configured" -ForegroundColor Yellow
+				Write-Host "  Use the Set-STDefaultCertificate function "
+			}
+		}
+	} else {
+		if (-not $Quiet) {
+			$script:DefaultCert = ''
+			Write-host "Default Certificate config does not exist.... " -ForegroundColor Yellow
+			Write-host "  Use Set-STDefaultCertificate if you want to use Certificate Encryption by default"
+			Write-host ""
+		}
+	}
+
+} catch {
+	$script:DefaultCert = ''
+	Write-host "Default Certificate config does not exist.... " -ForegroundColor Yellow
+	Write-host "  Use Set-STDefaultCertificate if you want to use Certificate Encryption by default"
+	Write-host ""
+}
+
+
 
 if (test-path $script:ScriptPath\formats) {
 	try {

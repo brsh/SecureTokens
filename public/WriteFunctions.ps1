@@ -103,6 +103,125 @@ Function Set-SecureTokenFolder {
 	}
 }
 
+Function Set-STDefaultCertificate {
+	<#
+	.SYNOPSIS
+	Set (and save) the default certificate used to encrypt tokens
+
+	.DESCRIPTION
+	This will set the default certificate for all new encrypted Tokens - meaning all new Tokens
+	will be portable, encrypted by this certificate (unless over-ridden by the -Certificate switch
+	on the Add-SecureToken function). With this set, you cannot create non-portable Tokens unless
+	you use the -Clear switch.
+
+	You can persist the Default Certificate between sessions via the -Clobber switch - this writes
+	the Thumbprint to a file in the Module's config directory. You can clear the current 'in memory'
+	default certificate to create non-portable Tokens without saving the "clear" to the file.
+
+	At this point, I only allow CurrentUser certs to be set as default. I'll prolly open that up
+	if I find I'm using more LocalMachine certs.
+
+	Of course, the certificate set as default has to exist on the system before it can be set :)
+
+	.PARAMETER Certificate
+	The certificate to use as the default
+
+	.PARAMETER Clear
+	Clears the setting so Tokens become non-portable
+
+	.PARAMETER clobber
+	Saves the Default Certificate (actual cert or 'clear' so it's the default going forward
+
+	.EXAMPLE
+	Set-STDefaultCertificate -Certificate cn=myne@certs -clobber
+
+	This will set the default certificate to cn=myne@certs and saves it so it will always be the default until the next -clobber
+
+	.EXAMPLE
+	Set-STDefaultCertificate -Clear
+
+	The Default Certificate will be cleared, and certs won't be portable by default. The previous default will be active at the next module instantiation.
+
+	.EXAMPLE
+	Set-STDefaultCertificate -Clear -Clobber
+
+	Resets the saved default to "nothing" for the active session and future sessions
+
+	#>
+	[CmdletBinding(DefaultParameterSetName = "Set")]
+	param (
+		[Parameter(Mandatory = $true, ParameterSetName = 'Set', Position = 0)]
+		[ValidateNotNullOrEmpty()]
+		[ArgumentCompleter( {
+				param($Command, $Parameter, $WordToComplete, $CommandAst, $FakeBoundParams)
+				if ($WordToComplete) {
+					(Find-STEncryptionCertificate -Filter "$WordToComplete").Subject
+				} else {
+					(Find-STEncryptionCertificate).Subject
+				}
+			})]
+		[Alias('Cert', 'To')]
+		[string] $Certificate,
+		[Parameter(Mandatory = $false, ParameterSetName = 'Set')]
+		[Parameter(Mandatory = $false, ParameterSetName = 'Clear')]
+		[Alias('Force')]
+		[switch] $Clobber = $false,
+		[Parameter(Mandatory = $true, ParameterSetName = 'Clear')]
+		[switch] $Clear = $false
+	)
+
+	$DefCertFile = "$script:scriptpath\config\DefaultCert.txt"
+
+	if ($script:DefaultCert) {
+		$OldDefCert = Find-STEncryptionCertificate -filter ${script:DefaultCert}$
+		if ($OldDefCert) {
+			Write-Host "Old Default Certififcate was" -ForegroundColor Green
+			$OldDefCert
+			Write-Host ''
+		}
+	}
+
+	if ($Clear) {
+		if ($script:DefaultCert -eq '') {
+			Write-Host "Certificates is already blank - No change made" -ForegroundColor Yellow
+			$Clobber = $false
+		} else {
+			Write-Host "Default Certificate is now empty" -ForegroundColor Yellow
+			$script:DefaultCert = ''
+		}
+	}
+
+	if ($Certificate) {
+		$NewDefCert = Find-STEncryptionCertificate -filter ${Certificate}$
+		if ($NewDefCert) {
+			Write-Host "New Default Certificate is " -ForegroundColor Green
+			$NewDefCert
+			Write-Host ''
+			if ($NewDefCert.Thumbprint -eq $OldDefCert.Thumbprint) {
+				Write-Host "Certificates Match - No change made" -ForegroundColor Yellow
+				$Clobber = $false
+			} else {
+				$script:DefaultCert = $NewDefCert.Thumbprint
+			}
+		}
+	}
+
+	if ($clobber) {
+		if (-not $(test-path -Path $script:ScriptPath\Config)) {
+			$null = new-item -path $script:ScriptPath\config -ItemType Directory -ErrorAction SilentlyContinue
+		}
+		try {
+			Set-Content -Path $DefCertFile -Value $script:DefaultCert
+			Write-Host "The change has been saved" -ForegroundColor Green
+		} catch {
+			Write-Error "Could not save the file."
+			$_.Exception
+		}
+	}
+
+}
+
+
 Function Add-SecureToken {
 	<#
 	.SYNOPSIS
@@ -113,6 +232,12 @@ Function Add-SecureToken {
 	in scripts or command lines but that you don't want other people to know. This command
 	adds a new token, secured via PowerShell's securestring encryption (tied to this user
 	on this machine) or via certificate document encryption (potentially portable).
+
+	If you use the Set-DefaultCertificate to set a .. um .. default certificate, all new
+	Tokens will be created as Portable (using that .. um .. default certificate by .. um ..
+	default). You can still use the -Certificate switch to specify a different cert for
+	a particular Token, but you will not be able to create non-portable Tokens unless you
+	clear the default certificate.
 
 	.PARAMETER Name
 	The name of the token - only used for reference to the stored Token
@@ -165,7 +290,7 @@ Function Add-SecureToken {
 				}
 			})]
 		[Alias('Cert', 'To')]
-		[string] $Certificate
+		[string] $Certificate = $script:DefaultCert
 	)
 
 	try {
