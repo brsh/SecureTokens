@@ -97,5 +97,45 @@
 				</TableRowEntries>
 			</TableControl>
 		</View>
+		<View>
+			<Name>SecureTokens.RemovedToken</Name>
+			<ViewSelectedBy>
+				<TypeName>SecureTokens.RemovedToken</TypeName>
+			</ViewSelectedBy>
+			<TableControl>
+				<TableHeaders>
+					<TableColumnHeader>
+						<Label>Name</Label>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>Deleted</Label>
+						<alignment>Left</alignment>
+					</TableColumnHeader>
+				</TableHeaders>
+				<TableRowEntries>
+					<TableRowEntry>
+						<TableColumnItems>
+							<TableColumnItem>
+								<PropertyName>Name</PropertyName>
+							</TableColumnItem>
+							<TableColumnItem>
+								<ScriptBlock>
+									$Escape = "$([char]27)"
+									$Yellow = "$Escape[1;33m"
+									$Green = "$Escape[0;32m"
+									$Red = "$Escape[0;91m"
+									$Off = "$Escape[0m"
+									$color = $Green
+									if ($_.Deleted.ToString() -ne $true.ToString()) {
+										$color = $Red
+									}
+									"$Color{0}$Off" -f $_.Deleted
+								</ScriptBlock>
+							</TableColumnItem>
+						</TableColumnItems>
+					</TableRowEntry>
+				</TableRowEntries>
+			</TableControl>
+		</View>
 	</ViewDefinitions>
 </Configuration>

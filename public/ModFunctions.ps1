@@ -117,10 +117,17 @@ Aida       True
 					Get-SecureTokenList
 				}
 			})]
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $true, Position = 0)]
 		[string] $Name,
+		[switch] $Force = $false,
 		[switch] $Confirm = $false
 	)
+
+	#Deprecating $Confirm cuz it's the wrong option here
+	#It's a delete, it should never just do it!
+	[bool] $JustDoIt = $true
+	if ($Confirm.IsPresent) { $JustDoIt = $Confirm }
+	if ($Force.IsPresent) { $JustDoIt = -not $Force }
 
 	$hash = @{
 		Name    = $Name
@@ -134,7 +141,7 @@ Aida       True
 			$hash.Name = $RealName
 			try {
 				$file = "$($STFolder.Folder)\${RealName}.txt"
-				Remove-Item -Path $file -Confirm:$Confirm
+				Remove-Item -Path $file -Confirm:$JustDoIt
 				$hash.Deleted = (-not (test-path $file))
 			} catch {
 				$hash.Deleted = "Error: $($_.Exception.Message)"
@@ -145,6 +152,7 @@ Aida       True
 	} else {
 		$hash.Deleted = "Error: SecureTokenFolder doesn't exists ?!?!"
 	}
-
-	New-Object -TypeName psobject -Property $hash
+	$out = New-Object -TypeName psobject -Property $hash
+	$out.PSObject.TypeNames.Insert(0, 'SecureTokens.RemovedToken')
+	$out
 }
