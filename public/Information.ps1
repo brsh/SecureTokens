@@ -29,5 +29,5 @@ Function Get-SecureTokenHelp {
 			$all += $out
 		}
 	}
-	$all | format-table -Wrap -AutoSize | Out-String | Write-Host
+	$all | Select-Object Command, Description | format-table -Wrap -AutoSize | Out-String | Write-Host
 }
