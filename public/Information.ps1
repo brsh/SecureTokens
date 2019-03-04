@@ -15,7 +15,11 @@ Function Get-SecureTokenHelp {
 	$all = @()
 	$list = Get-Command -Type function -Module "SecureTokens" | Where-Object { $_.Name -in $script:showhelp}
 	$list | ForEach-Object {
-		$RetHelp = Get-help $_.Name -ShowWindow:$false -ErrorAction SilentlyContinue
+		if ($PSVersionTable.PSVersion.Major -lt 6) {
+			$RetHelp = Get-help $_.Name -ShowWindow:$false -ErrorAction SilentlyContinue
+		} else {
+			$RetHelp = Get-help $_.Name -ErrorAction SilentlyContinue
+		}
 		if ($RetHelp.Description) {
 			$Infohash = @{
 				Command     = $_.Name
