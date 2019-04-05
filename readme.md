@@ -1,4 +1,4 @@
-# SecuredTokens
+# SecureTokens PowerShell Module
 
 ## Overview
 
