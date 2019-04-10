@@ -34,6 +34,14 @@ function Set-SavedToken {
 	$retval
 }
 
+function Get-UnsecuredSecureString {
+	param (
+		[securestring] $SecureString
+	)
+	$Credentials = New-Object System.Management.Automation.PSCredential ("MySecureToken", $SecureString)
+	$Credentials.GetNetworkCredential().Password
+}
+
 function Get-SavedToken {
 	param(
 		[string] $Name = ''
@@ -48,8 +56,7 @@ function Get-SavedToken {
 				if ($unprotected -eq $credcontent) {
 					try {
 						$UsableSecureString = Get-Content $credpath | ConvertTo-SecureString -ErrorAction Stop
-						$Credentials = New-Object System.Management.Automation.PSCredential ("MySlackToken", $UsableSecureString)
-						$retval = $Credentials.GetNetworkCredential().Password
+						$retval = Get-UnsecuredSecureString -SecureString $UsableSecureString
 					} catch [System.Security.Cryptography.CryptographicException] {
 						$retval = "Error: Maybe Token Not Owned By This User on This Machine"
 					} catch {

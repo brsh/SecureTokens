@@ -32,15 +32,21 @@ to check it), and it doesn't provide an interface to delete 1 item. So, the
 `Add-SecureToken` command, complete with the text of the Token, exists in that
 file. Big :(
 
-I'm trying to fix that... I thought a simple "re-write" of the file removing the
-offending line would suffice (and you'll see that code in this commit), but that
-just breaks ALL history in the current session - not a good solution.
+I now have a fix (the file is UTF-8, btw) - but I consider it beta at this point. I
+don't want to go and start deleting data all willy-nilly without people expecting
+it!
 
-Since this is how it has ALWAYS functioned, I'm tabling the solution for now
-while I research an option, but wanted to get a notice out about this.
+Besides, it slows down the Add-SecureToken function a bit (more as the history file
+grows).
 
-If anyone has a suggestion....
+So, if you want to try the history scrub, Add-SecureToken now has a `-ScrubPSReadlineHistory`
+switch. This will remove ALL instances of Add-SecureToken where it's the first
+item on a line.
 
+I've also added a `-SecureToken` parameter that takes a SecureString (or prompts
+for one). It's a bit of a kludge at the moment - with some back and forth
+en/de/encryption - I have plans to rework a couple things in the near(-ish) future,
+so I fig this config can stay for a bit.
 
 ### Note
 Huge shout out to Boe Prox for the CMS message encryption!
@@ -185,6 +191,22 @@ Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 
 ```powershell
 PS C:\Scripts> Add-SecureToken -Name 'Aida' -Token '1234-5678-9' -Certificate 'cn=mycert@localhost'
+Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
+```
+
+```powershell
+PS C:\Scripts> Add-SecureToken -Name 'Aida' -Token '1234-5678-9' -Certificate 'cn=mycert@localhost'
+Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
+```
+
+```powershell
+PS C:\Scripts> Add-SecureToken -Name 'Aida' -SecureToken $(Read-Host -AsSecureString)
+Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
+```
+
+```powershell
+PS C:\Scripts> Add-SecureToken -Name 'Aida'
+Enter the Token: ****
 Saved token to C:\Users\user\AppData\Roaming\SecureTokens\Aida.txt
 ```
 

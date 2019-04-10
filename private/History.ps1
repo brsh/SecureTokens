@@ -16,7 +16,7 @@ function Clear-SavedPSReadlineHistory {
 				$HPContent = Get-Content $HistoryPath -ErrorAction Stop | Where-Object { $_ -notmatch '^Add-SecureToken' }
 				if ($HPContent.Length -gt 0) {
 					try {
-						$HPContent | Out-File -FilePath $HistoryPath -Force -ErrorAction Stop
+						$HPContent | Out-File -FilePath $HistoryPath -Force -ErrorAction Stop -Encoding utf8
 					} catch {
 						Write-Host 'Could not save changes to PSReadline History file' -ForegroundColor Red
 						Write-Host "  Path: $HistoryPath"

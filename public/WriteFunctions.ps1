@@ -52,7 +52,7 @@ Function Set-SecureTokenFolder {
 	}
 
 	[bool] $DoSet = $false
-	if (test-path $folder) {
+	if (Test-Path $folder) {
 		Write-Host "Folder '$folder' exists" -ForegroundColor Green
 		$DoSet = $true
 	} else {
@@ -60,10 +60,10 @@ Function Set-SecureTokenFolder {
 		if (-not $Clobber) {
 			$answer = Set-TimedPrompt -prompt "Create it?" -SecondsToWait 20 -Options 'Yes', 'No'
 		}
-		write-host ''
+		Write-Host ''
 		if (($answer.Response -eq 'Yes') -or $clobber) {
 			try {
-				$created = new-item -path "$folder" -ItemType Directory -ErrorAction Stop
+				$created = New-Item -path "$folder" -ItemType Directory -ErrorAction Stop
 				if ($created) {
 					Write-Host "Folder '$folder' created." -ForegroundColor Green
 					$DoSet = $true
@@ -84,11 +84,11 @@ Function Set-SecureTokenFolder {
 
 	if ($DoSet) {
 		$script:SecureTokenFolder = $folder
-		Write-host "SecureTokenFolder is $script:SecureTokenFolder" -ForegroundColor Yellow
+		Write-Host "SecureTokenFolder is $script:SecureTokenFolder" -ForegroundColor Yellow
 
 		if ($clobber) {
-			if (-not $(test-path -Path $script:ScriptPath\Config)) {
-				new-item -path $script:ScriptPath\config -ItemType Directory -ErrorAction SilentlyContinue
+			if (-not $(Test-Path -Path $script:ScriptPath\Config)) {
+				New-Item -path $script:ScriptPath\config -ItemType Directory -ErrorAction SilentlyContinue
 			}
 			try {
 				Set-Content -Path "$ScriptPath\Config\FolderPath.txt" -Value $script:SecureTokenFolder
@@ -207,8 +207,8 @@ Function Set-STDefaultCertificate {
 	}
 
 	if ($clobber) {
-		if (-not $(test-path -Path $script:ScriptPath\Config)) {
-			$null = new-item -path $script:ScriptPath\config -ItemType Directory -ErrorAction SilentlyContinue
+		if (-not $(Test-Path -Path $script:ScriptPath\Config)) {
+			$null = New-Item -path $script:ScriptPath\config -ItemType Directory -ErrorAction SilentlyContinue
 		}
 		try {
 			Set-Content -Path $DefCertFile -Value $script:DefaultCert
@@ -261,6 +261,8 @@ Function Add-SecureToken {
 	This will save the token as an encrypted string using the cn=portable@localhost certificate
 
 	#>
+
+	[CmdletBinding(DefaultParameterSetName = "SecureString")]
 	param (
 		[Parameter(Mandatory = $true, Position = 0)]
 		[ValidateNotNullOrEmpty()]
@@ -274,11 +276,15 @@ Function Add-SecureToken {
 			})]
 		[Alias('UserName', 'User', 'Item')]
 		[string] $Name,
-		[Parameter(Mandatory = $true, Position = 1)]
+		[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'SecureString')]
+		[ValidateNotNullOrEmpty()]
+		[Alias('SecurePassword', 'SecureSecret')]
+		[securestring] $SecureToken,
+		[Parameter(Mandatory = $true, Position = 1, ParameterSetName = 'String')]
 		[ValidateNotNullOrEmpty()]
 		[Alias('Password', 'Secret')]
 		[string] $Token,
-		[Parameter(Mandatory = $false, Position = 0)]
+		[Parameter(Mandatory = $false)]
 		[Alias('Force')]
 		[switch] $Clobber = $false,
 		[ArgumentCompleter( {
@@ -290,19 +296,29 @@ Function Add-SecureToken {
 				}
 			})]
 		[Alias('Cert', 'To')]
-		[string] $Certificate = $script:DefaultCert
+		[string] $Certificate = $script:DefaultCert,
+		[switch] $ScrubPSReadlineHistory = $false
 	)
 
-	try {
-		Write-Verbose "Trying to clear the invocation from history - keeps the password safer"
-		Clear-History -Newest -Count 1
-	} catch {
-		Write-Host "Couldn't remove this command from History." -ForegroundColor Red
-		Write-Host "Sorry, but the password will visible in the command history." -ForegroundColor Yellow
+	if ($PSBoundParameters.ContainsKey("Token")) {
+		try {
+			Write-Verbose "Trying to clear the invocation from history - keeps the password safer"
+			Clear-History -Newest -Count 1
+			if ($ScrubPSReadlineHistory) { Clear-SavedPSReadlineHistory -Verbose }
+		} catch {
+			Write-Host "Couldn't remove this command from History." -ForegroundColor Red
+			Write-Host "Sorry, but the password will visible in the command history." -ForegroundColor Yellow
+		}
+	} else {
+		if ($null -eq $SecureToken) {
+			Write-Host "Enter the Token: " -NoNewline
+			$SecureToken = $host.ui.ReadLineAsSecureString()
+		}
+		$Token = Get-UnsecuredSecureString -SecureString $SecureToken
 	}
 
 	[bool] $DoIt = $true
-	if (test-path "$($script:SecureTokenFolder)\$Name.txt") {
+	if (Test-Path "$($script:SecureTokenFolder)\$Name.txt") {
 		Write-Host "File Exists! " -ForegroundColor Red
 		if (-not $Clobber) {
 			Write-Host "Please use the -Clobber switch if you want to over-write the file." -ForegroundColor Yellow
@@ -315,7 +331,7 @@ Function Add-SecureToken {
 			Name  = $Name
 			Token = $Token
 		}
-		if ($Certificate) { $hash.Add("Certificate", $Certificate)}
+		if ($Certificate) { $hash.Add("Certificate", $Certificate) }
 		$retval = Set-SavedToken @hash
 
 		if ($retval -match "Error: ") {
