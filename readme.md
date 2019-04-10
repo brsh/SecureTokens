@@ -21,6 +21,26 @@ Yes, you read that right:
   installed to the correct certificate store (so CurrentUser\My if it will be used
   by a user or LocalMachine\My if the script will be run "by the computer")
 
+### Security Note
+Sigh.
+
+Clearing the current session command history is simple enough, and I've been
+doing that since way early in development.
+
+BUT, PSReadline saves its history in a text file (run `(Get-PSReadLineOption).HistorySavePath`
+to check it), and it doesn't provide an interface to delete 1 item. So, the
+`Add-SecureToken` command, complete with the text of the Token, exists in that
+file. Big :(
+
+I'm trying to fix that... I thought a simple "re-write" of the file removing the
+offending line would suffice (and you'll see that code in this commit), but that
+just breaks ALL history in the current session - not a good solution.
+
+Since this is how it has ALWAYS functioned, I'm tabling the solution for now
+while I research an option, but wanted to get a notice out about this.
+
+If anyone has a suggestion....
+
 
 ### Note
 Huge shout out to Boe Prox for the CMS message encryption!
@@ -72,22 +92,22 @@ import-module SecureTokens
 
 From there you can:
 
-Command                        | Description
---- | ---
-Set-SecureTokenFolder          | Set (and save) the location of the files that hold secured tokens
-Get-SecureTokenFolder          | Returns the path to the tokens folder
-Add-SecureToken                | Add a token to the secured tokens file
-Get-SecureToken                | Returns the Token for the specified Name
-Get-SecureTokenList            | Returns the names of all tokens
-Get-SecureTokenHelp            | List commands available in the SecureTokens Module
-Remove-SecureToken             | Deletes an existing Token
-Rename-SecureToken             | Renames an existing Token to the specified Name
-New-STEncryptionCertificate    | Creates a new document encryption certificate
-Find-STEncryptionCertificate   | Returns certificates available for encryption
-Export-STEncryptionCertificate | Exports a document encryption certificate for later import
-Import-STEncryptionCertificate | Imports a document encryption certificate for use
-Get-STDefaultCertificate       | Returns the current Default Certificate
-Set-STDefaultCertificate       | Set (and save) the default certificate used to encrypt tokens
+| Command                        | Description                                                       |
+| ------------------------------ | ----------------------------------------------------------------- |
+| Set-SecureTokenFolder          | Set (and save) the location of the files that hold secured tokens |
+| Get-SecureTokenFolder          | Returns the path to the tokens folder                             |
+| Add-SecureToken                | Add a token to the secured tokens file                            |
+| Get-SecureToken                | Returns the Token for the specified Name                          |
+| Get-SecureTokenList            | Returns the names of all tokens                                   |
+| Get-SecureTokenHelp            | List commands available in the SecureTokens Module                |
+| Remove-SecureToken             | Deletes an existing Token                                         |
+| Rename-SecureToken             | Renames an existing Token to the specified Name                   |
+| New-STEncryptionCertificate    | Creates a new document encryption certificate                     |
+| Find-STEncryptionCertificate   | Returns certificates available for encryption                     |
+| Export-STEncryptionCertificate | Exports a document encryption certificate for later import        |
+| Import-STEncryptionCertificate | Imports a document encryption certificate for use                 |
+| Get-STDefaultCertificate       | Returns the current Default Certificate                           |
+| Set-STDefaultCertificate       | Set (and save) the default certificate used to encrypt tokens     |
 
 The module will automatically show these commands on load (it runs
 Get-SecureTokenHelp) unless you use the `-ArgumentList $true` option of
