@@ -6,6 +6,7 @@
 #region Private Variables
 # Current script path
 [string] $script:ScriptPath = Split-Path (get-variable myinvocation -scope script).value.Mycommand.Definition -Parent
+if ((Get-Variable MyInvocation -Scope script).Value.Line.Trim().Length -eq 0) { $Quiet = $true }
 #endregion Private Variables
 
 #region Private Helpers
@@ -99,7 +100,7 @@ try {
 if (test-path $script:ScriptPath\formats) {
 	try {
 		Update-FormatData $ScriptPath\formats\*.ps1xml -ErrorAction Stop
-	} catch {}
+	} catch { }
 }
 
 if (-not $Quiet) { Get-SecureTokenHelp }
